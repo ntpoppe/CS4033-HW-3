@@ -34,12 +34,15 @@ edge(A, B, D) :- road(B, A, D).
 % Entry point. Goal fixed to bucharest.
 bfs(Start, Path, Cost) :-
     Goal = bucharest,
-    % Initialize the queue with a single path @ start
-    bfs_queue([[Start]], Goal, RevPath),
-    % Prepending entries to path list is O(1), so we do that instead of appending (O(n)).
-    % As a result of that, we need to reverse the path after.
-    reverse(RevPath, Path),
-    path_cost(Path, Cost).
+    (
+        % Initialize the queue with a single path @ start
+        bfs_queue([[Start]], Goal, RevPath),
+        % Prepending entries to path list is O(1), so we do that instead of appending (O(n)).
+        % As a result of that, we need to reverse the path after.
+        reverse(RevPath, Path),
+        path_cost(Path, Cost)
+    ;   Path=[], Cost=0
+    ).
 
 % Base case: front of queue starts with Goal. Return that path.
 bfs_queue([[Goal|RestPath] | _], Goal, [Goal|RestPath]) :- !.
