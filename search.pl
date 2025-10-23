@@ -70,3 +70,13 @@ path_cost([A,B|T], Cost) :-
 % Example calls:
 % bfs(oradea, Path, Cost).
 % bfs(timisoara, Path, Cost).
+
+% WILL ADD COMMENTS
+dfs(Start, Path, Cost) :-
+    Goal = bucharest,
+    (
+        dfs_stack([[Start]], Goal, RevPath),
+        reverse(RevPath, Path),
+        path_cost(Path, Cost)
+    ;   Path=[], Cost=0
+    ).
