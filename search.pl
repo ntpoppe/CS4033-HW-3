@@ -84,6 +84,60 @@ dfs(Start, Path, Cost) :-
         path_cost(Path, Cost)
     ;   Path=[], Cost=0
     ).
+% straight-line distances to Bucharest
+h(arad, 366).
+h(zerind, 374).
+h(oradea, 380).
+h(timisoara, 329).
+h(lugoj, 244).
+h(mehadia, 241).
+h(drobeta, 242).
+h(craiova, 160).
+h(sibiu, 253).
+h(fagaras, 176).
+h(rimnicu_vilcea, 193).
+h(pitesti, 100).
+h(bucharest, 0).
+h(giurgiu, 77).
+h(urziceni, 80).
+h(hirsova, 151).
+h(eforie, 161).
+h(vaslui, 199).
+h(iasi, 226).
+h(neamt, 234).
+
+% Initializes the search
+% First get the estimated distance goal for the start node
+% Initialize the list with a single path entry
+    % F is total estimated cost
+    % G is cost so far and starts at 0
+    % Path will keep track of the route and starts with [Start]
+astar(Start, Path, Cost) :-
+    Goal = bucharest,
+    astar_queue([(0, [Start], 0)], Goal, RevPath, Cost),
+    reverse(RevPath, Path).
+
+% Base case: goal found
+% If the first element in the open list has the Goal at the head of its path,
+% then the destination is reached and it can return to the path.
+astar_queue([(_, [Goal|Rest], G) | _], Goal, [Goal|Rest], G) :- !.
+
+% Generate all possible next cities (neighbors) connected to the current city.
+    % For each neighbor it will avoid repetion, Compute the new cost so far and the total estimated cost
+astar_queue([(_, [Current|Rest], G) | Others], Goal, Path, Cost) :-
+    findall((F, [Next, Current | Rest], GNew),
+            ( edge(Current, Next, D),
+              \+ member(Next, [Current|Rest]),
+              GNew is G + D,
+              h(Next, H),
+              F is GNew + H ),
+            Children),
+     % Add all new paths to the open list
+    append(Others, Children, TempQueue),
+    % Sort the open list based on the estimated total cost F
+    sort(TempQueue, Sorted),
+    % Recursive call with the updated open list
+    astar_queue(Sorted, Goal, Path, Cost).
 
 
 % the base case is when the first path that is in the queue starts with
