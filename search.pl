@@ -71,12 +71,40 @@ path_cost([A,B|T], Cost) :-
 % bfs(oradea, Path, Cost).
 % bfs(timisoara, Path, Cost).
 
-% WILL ADD COMMENTS
+% dfs
+% entry points, goal is fixed to Bucharest
 dfs(Start, Path, Cost) :-
     Goal = bucharest,
     (
-        dfs_stack([[Start]], Goal, RevPath),
+        %initialize the qeueu with one path at the start. The queue in DFS is more like a stack because it is last in first out, the children will go to the front of the queue
+        dfs_queue([[Start]], Goal, RevPath),
+        % Prepending entries to path list is O(1), so we do that instead of appending (O(n)).
+        % As a result of that, we need to reverse the path after.
         reverse(RevPath, Path),
         path_cost(Path, Cost)
     ;   Path=[], Cost=0
     ).
+
+
+% the base case is when the first path that is in the queue starts with
+% the goal city. It will return that path.
+dfs_queue([[Goal|RestPath] | _], Goal, [Goal|RestPath]) :- !.
+
+% This will take one neighbroing city that is unvicited and recursively
+% expand the first path in the queue. Then the path will be added to the
+% front of th queue.
+dfs_queue([[Current|RestPath] | OtherPaths], Goal, Solution) :-
+    %gets a city next to the current one, which will create an edge from current to next
+    edge(Current, Next, _),
+    %makes sure that the neighbor city hasn't already been visited
+    \+ member(Next, [Current|RestPath]),
+    %add the new path to the front of the queue. In DFS the queue acts like a stack because the new paths are added to the front.
+    NewQueue = [[Next, Current | RestPath] | OtherPaths],
+    %search with recursion using the updated queue
+    dfs_queue(NewQueue, Goal, Solution).
+
+% this will remove the current path from the queue if it has no more
+% neighboring cities available. Then it will continue with the remaining
+% paths
+dfs_queue([_ | OtherPaths], Goal, Solution) :-
+    dfs_queue(OtherPaths, Goal, Solution).
