@@ -84,6 +84,30 @@ dfs(Start, Path, Cost) :-
         path_cost(Path, Cost)
     ;   Path=[], Cost=0
     ).
+
+% the base case is when the first path that is in the queue starts with
+% the goal city. It will return that path.
+dfs_queue([[Goal|RestPath] | _], Goal, [Goal|RestPath]) :- !.
+
+% This will take one neighbroing city that is unvicited and recursively
+% expand the first path in the queue. Then the path will be added to the
+% front of th queue.
+dfs_queue([[Current|RestPath] | OtherPaths], Goal, Solution) :-
+    %gets a city next to the current one, which will create an edge from current to next
+    edge(Current, Next, _),
+    %makes sure that the neighbor city hasn't already been visited
+    \+ member(Next, [Current|RestPath]),
+    %add the new path to the front of the queue. In DFS the queue acts like a stack because the new paths are added to the front.
+    NewQueue = [[Next, Current | RestPath] | OtherPaths],
+    %search with recursion using the updated queue
+    dfs_queue(NewQueue, Goal, Solution).
+
+% this will remove the current path from the queue if it has no more
+% neighboring cities available. Then it will continue with the remaining
+% paths
+dfs_queue([_ | OtherPaths], Goal, Solution) :-
+    dfs_queue(OtherPaths, Goal, Solution).
+    
 % straight-line distances to Bucharest
 h(arad, 366).
 h(zerind, 374).
@@ -108,22 +132,19 @@ h(neamt, 234).
 
 % Initializes the search
 % First get the estimated distance goal for the start node
-% Initialize the list with a single path entry
-    % F is total estimated cost
-    % G is cost so far and starts at 0
-    % Path will keep track of the route and starts with [Start]
+% Initialize the list with a single path entry, F is total estimated cost,
+% G is cost so far and starts at 0 and path will keep track and starts with [Start]
 astar(Start, Path, Cost) :-
     Goal = bucharest,
     astar_queue([(0, [Start], 0)], Goal, RevPath, Cost),
     reverse(RevPath, Path).
 
-% Base case: goal found
-% If the first element in the open list has the Goal at the head of its path,
-% then the destination is reached and it can return to the path.
+% If the first element in the open list has the goal at the head,
+% then the destination is reached and it can return back to the path.
 astar_queue([(_, [Goal|Rest], G) | _], Goal, [Goal|Rest], G) :- !.
 
-% Generate all possible next cities (neighbors) connected to the current city.
-    % For each neighbor it will avoid repetion, Compute the new cost so far and the total estimated cost
+% Generate all possible next cities connected to the current city
+% For each neighbor it will avoid repetion and compute the new cost so far and the total estimated cost
 astar_queue([(_, [Current|Rest], G) | Others], Goal, Path, Cost) :-
     findall((F, [Next, Current | Rest], GNew),
             ( edge(Current, Next, D),
@@ -138,27 +159,3 @@ astar_queue([(_, [Current|Rest], G) | Others], Goal, Path, Cost) :-
     sort(TempQueue, Sorted),
     % Recursive call with the updated open list
     astar_queue(Sorted, Goal, Path, Cost).
-
-
-% the base case is when the first path that is in the queue starts with
-% the goal city. It will return that path.
-dfs_queue([[Goal|RestPath] | _], Goal, [Goal|RestPath]) :- !.
-
-% This will take one neighbroing city that is unvicited and recursively
-% expand the first path in the queue. Then the path will be added to the
-% front of th queue.
-dfs_queue([[Current|RestPath] | OtherPaths], Goal, Solution) :-
-    %gets a city next to the current one, which will create an edge from current to next
-    edge(Current, Next, _),
-    %makes sure that the neighbor city hasn't already been visited
-    \+ member(Next, [Current|RestPath]),
-    %add the new path to the front of the queue. In DFS the queue acts like a stack because the new paths are added to the front.
-    NewQueue = [[Next, Current | RestPath] | OtherPaths],
-    %search with recursion using the updated queue
-    dfs_queue(NewQueue, Goal, Solution).
-
-% this will remove the current path from the queue if it has no more
-% neighboring cities available. Then it will continue with the remaining
-% paths
-dfs_queue([_ | OtherPaths], Goal, Solution) :-
-    dfs_queue(OtherPaths, Goal, Solution).
